@@ -113,5 +113,10 @@ resultPancTT
 ```
 Now need to create your own data set and try to see if you can understand everything that is going on.  Still not sure that I understand how the censoring works.
 
-
+https://www.datacamp.com/community/tutorials/survival-analysis-R
+```{r}
+library(survminer)
+library(survival)
+ovarian
+```
 
