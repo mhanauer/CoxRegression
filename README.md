@@ -114,6 +114,71 @@ resultPancTT
 Now need to create your own data set and try to see if you can understand everything that is going on.  Still not sure that I understand how the censoring works.
 
 https://www.datacamp.com/community/tutorials/survival-analysis-R
+
+---
+title: "Survival"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Loading packages
+
+Censoring takes place when someone drops and the censoring takes place at that time point. Put how do we know which time point the censoring takes place?  If long format, then the 1 would be placed at the time point in which the censoring takes place.
+
+Futime is the time (let's just pretend days) until they either died or dropped out of the study.  So at that time point they are excluded from the study??  
+
+So you need to define the event.  If death is the event, then they are not censored, because that is the event and we have the time until the event?  So if death is the event and they don't die, then those people will receive a one at the last time point.  If they are lost to follow up then they will receive one, because they will be censored at that time, because we do not know what happened them?  
+
+So when the event happens is the data censored? Doesn't seem like it is?
+
+The question is how do you construct a censoring variable.
+
+Another question is including continous covariates in cox regression
+You get a zero if you are censored.
+```{r}
+library(survminer)
+library(survival)
+library(dplyr)
+ovarian <- ovarian %>% mutate(age_group = ifelse(age >=50, "old", "young"))
+ovarian$age_group <- factor(ovarian$age_group)
+```
+Vertical lines indicate censored data.
+```{r}
+surv_object <- Surv(time = ovarian$futime, event = ovarian$fustat)
+surv_object
+fit1 <- survfit(surv_object ~ rx, data = ovarian)
+fit1
+summary(fit1)
+
+ggsurvplot(fit1, data = ovarian, pval = TRUE)
+
+
+ovarian$rx <- factor(ovarian$rx, 
+                     levels = c("1", "2"), 
+                     labels = c("A", "B"))
+ovarian$resid.ds <- factor(ovarian$resid.ds, 
+                           levels = c("1", "2"), 
+                           labels = c("no", "yes"))
+ovarian$ecog.ps <- factor(ovarian$ecog.ps, 
+                          levels = c("1", "2"), 
+                          labels = c("good", "bad"))
+
+ovarian <- ovarian %>% mutate(age_group = ifelse(age >=50, "old", "young"))
+ovarian$age_group <- factor(ovarian$age_group)
+
+
+# Data seems to be bimodal
+```
+Now cox regression
+```{r}
+fit.coxph <- coxph(surv_object ~ rx + resid.ds + age_group + ecog.ps, 
+                   data = ovarian)
+ggforest(fit.coxph, data = ovarian)
+```
+
+
 ```{r}
 library(survminer)
 library(survival)
